@@ -47,7 +47,7 @@ namespace CampusServicesApp.Controllers
         // GET: Users/Create
         public IActionResult Create()
         {
-            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleId");
+            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleName");
             return View();
         }
 
@@ -56,15 +56,17 @@ namespace CampusServicesApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("UserId,Name,Email,RoleId")] User user)
+        public async Task<IActionResult> Create([Bind("Name,Email,RoleId")] User user)
         {
+            ModelState.Remove(nameof(CampusServicesApp.Models.User.Role));
+
             if (ModelState.IsValid)
             {
                 _context.Add(user);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleId", user.RoleId);
+            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleName", user.RoleId);
             return View(user);
         }
 
@@ -81,7 +83,7 @@ namespace CampusServicesApp.Controllers
             {
                 return NotFound();
             }
-            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleId", user.RoleId);
+            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleName", user.RoleId);
             return View(user);
         }
 
@@ -96,6 +98,8 @@ namespace CampusServicesApp.Controllers
             {
                 return NotFound();
             }
+
+            ModelState.Remove(nameof(CampusServicesApp.Models.User.Role));
 
             if (ModelState.IsValid)
             {
@@ -117,7 +121,7 @@ namespace CampusServicesApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleId", user.RoleId);
+            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleName", user.RoleId);
             return View(user);
         }
 

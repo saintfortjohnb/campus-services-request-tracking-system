@@ -1,0 +1,58 @@
+@model CampusServicesApp.Models.StatusHistory
+
+@{
+    ViewData["Title"] = "Edit Status History";
+}
+
+<h1>Edit Status History</h1>
+
+<h4>Status History</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <input type="hidden" asp-for="StatusHistoryId" />
+            <div class="form-group">
+                <label asp-for="RequestId" class="control-label">Service Request</label>
+                <select asp-for="RequestId" class="form-control" asp-items="ViewBag.RequestId">
+                    <option value="">-- Select Request --</option>
+                </select>
+                <span asp-validation-for="RequestId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="OldStatus" class="control-label"></label>
+                <input asp-for="OldStatus" class="form-control" />
+                <span asp-validation-for="OldStatus" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="NewStatus" class="control-label"></label>
+                <input asp-for="NewStatus" class="form-control" />
+                <span asp-validation-for="NewStatus" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ChangedBy" class="control-label">Changed By</label>
+                <select asp-for="ChangedBy" class="form-control" asp-items="ViewBag.ChangedBy">
+                    <option value="">-- Select User --</option>
+                </select>
+                <span asp-validation-for="ChangedBy" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ChangedAt" class="control-label"></label>
+                <input asp-for="ChangedAt" class="form-control" />
+                <span asp-validation-for="ChangedAt" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save Changes" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

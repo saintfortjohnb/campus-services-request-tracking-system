@@ -47,7 +47,7 @@ namespace CampusServicesApp.Controllers
         // GET: Categories/Create
         public IActionResult Create()
         {
-            ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamId");
+            ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamName");
             return View();
         }
 
@@ -56,15 +56,18 @@ namespace CampusServicesApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CategoryId,CategoryName,DefaultTeamId,IsActive")] Category category)
+        public async Task<IActionResult> Create([Bind("CategoryName,DefaultTeamId,IsActive")] Category category)
         {
+            
+            ModelState.Remove(nameof(Category.DefaultTeam));
+            
             if (ModelState.IsValid)
             {
                 _context.Add(category);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamId", category.DefaultTeamId);
+            ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamName", category.DefaultTeamId);
             return View(category);
         }
 
@@ -81,7 +84,7 @@ namespace CampusServicesApp.Controllers
             {
                 return NotFound();
             }
-            ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamId", category.DefaultTeamId);
+            ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamName", category.DefaultTeamId);
             return View(category);
         }
 
@@ -96,6 +99,8 @@ namespace CampusServicesApp.Controllers
             {
                 return NotFound();
             }
+
+            ModelState.Remove(nameof(Category.DefaultTeam));
 
             if (ModelState.IsValid)
             {
@@ -117,7 +122,7 @@ namespace CampusServicesApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamId", category.DefaultTeamId);
+            ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamName", category.DefaultTeamId);
             return View(category);
         }
 

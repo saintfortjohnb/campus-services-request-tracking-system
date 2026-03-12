@@ -53,14 +53,43 @@ namespace CampusServicesApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("TeamId,TeamName,TeamEmail,IsActive")] ServiceTeam serviceTeam)
+        public async Task<IActionResult> Create([Bind("TeamName,TeamEmail,IsActive")] ServiceTeam serviceTeam)
         {
+            if (string.IsNullOrWhiteSpace(serviceTeam.TeamName))
+            {
+                ModelState.AddModelError(nameof(ServiceTeam.TeamName), "Team name is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(serviceTeam.TeamEmail))
+            {
+                ModelState.AddModelError(nameof(ServiceTeam.TeamEmail), "Team email is required.");
+            }
+
             if (ModelState.IsValid)
             {
-                _context.Add(serviceTeam);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _context.Add(serviceTeam);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException ex)
+                {
+                    var message = ex.InnerException?.Message ?? ex.Message;
+
+                    if (message.Contains("duplicate", StringComparison.OrdinalIgnoreCase) ||
+                        message.Contains("unique", StringComparison.OrdinalIgnoreCase) ||
+                        message.Contains("UQ__", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ModelState.AddModelError(nameof(ServiceTeam.TeamName), "A service team with this name already exists. Use a different team name or edit the existing team.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Unable to save the service team right now. Please try again.");
+                    }
+                }
             }
+
             return View(serviceTeam);
         }
 

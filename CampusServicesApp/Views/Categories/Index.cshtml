@@ -1,26 +1,20 @@
 @model IEnumerable<CampusServicesApp.Models.Category>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Categories";
 }
 
-<h1>Index</h1>
+<h1>Categories</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">Create New Category</a>
 </p>
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CategoryName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsActive)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DefaultTeam)
-            </th>
+            <th>Name</th>
+            <th>Active</th>
+            <th>Default Team</th>
             <th></th>
         </tr>
     </thead>
@@ -34,7 +28,7 @@
                 @Html.DisplayFor(modelItem => item.IsActive)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.DefaultTeam.TeamId)
+                @Html.DisplayFor(modelItem => item.DefaultTeam.TeamName)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.CategoryId">Edit</a> |
