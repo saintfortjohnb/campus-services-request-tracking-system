@@ -1,67 +1,63 @@
 @model CampusServicesApp.Models.ServiceRequest
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Service Request";
 }
 
-<h1>Edit</h1>
+<h1>Edit Service Request</h1>
 
-<h4>ServiceRequest</h4>
+<h4>Service Request</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="All" class="text-danger"></div>
             <input type="hidden" asp-for="RequestId" />
             <div class="form-group">
-                <label asp-for="TrackingNumber" class="control-label"></label>
+                <label asp-for="TrackingNumber" class="control-label">Tracking Number</label>
                 <input asp-for="TrackingNumber" class="form-control" />
                 <span asp-validation-for="TrackingNumber" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="RequesterId" class="control-label"></label>
-                <select asp-for="RequesterId" class="form-control" asp-items="ViewBag.RequesterId"></select>
+                <label asp-for="RequesterId" class="control-label">Requester</label>
+                <select asp-for="RequesterId" class="form-control" asp-items="ViewBag.RequesterId">
+                    <option value="">-- Select Requester --</option>
+                </select>
                 <span asp-validation-for="RequesterId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CategoryId" class="control-label"></label>
-                <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.CategoryId"></select>
+                <label asp-for="CategoryId" class="control-label">Category</label>
+                <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.CategoryId">
+                    <option value="">-- Select Category --</option>
+                </select>
                 <span asp-validation-for="CategoryId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="TeamId" class="control-label"></label>
-                <select asp-for="TeamId" class="form-control" asp-items="ViewBag.TeamId"></select>
+                <label asp-for="TeamId" class="control-label">Team</label>
+                <select asp-for="TeamId" class="form-control" asp-items="ViewBag.TeamId">
+                    <option value="">-- Select Team --</option>
+                </select>
                 <span asp-validation-for="TeamId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CurrentStatus" class="control-label"></label>
+                <label asp-for="CurrentStatus" class="control-label">Current Status</label>
                 <input asp-for="CurrentStatus" class="form-control" />
                 <span asp-validation-for="CurrentStatus" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
+                <label asp-for="Description" class="control-label">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ClosedAt" class="control-label"></label>
-                <input asp-for="ClosedAt" class="form-control" />
-                <span asp-validation-for="ClosedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+            <div class="form-group mt-3">
+                <input type="submit" value="Save Changes" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>
 
 @section Scripts {

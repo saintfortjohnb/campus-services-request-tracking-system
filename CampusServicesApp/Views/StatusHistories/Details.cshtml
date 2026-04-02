@@ -1,48 +1,42 @@
 @model CampusServicesApp.Models.StatusHistory
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Status History Details";
 }
 
-<h1>Details</h1>
+<h1>Status History Details</h1>
 
 <div>
-    <h4>StatusHistory</h4>
+    <h4>Status History</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OldStatus)
-        </dt>
-        <dd class = "col-sm-10">
+        <dt class="col-sm-2">Old Status</dt>
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.OldStatus)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NewStatus)
-        </dt>
-        <dd class = "col-sm-10">
+
+        <dt class="col-sm-2">New Status</dt>
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.NewStatus)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ChangedAt)
-        </dt>
-        <dd class = "col-sm-10">
+
+        <dt class="col-sm-2">Changed At</dt>
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.ChangedAt)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ChangedByNavigation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ChangedByNavigation.UserId)
+
+        <dt class="col-sm-2">Changed By</dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ChangedByNavigation.Name)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Request)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Request.RequestId)
+
+        <dt class="col-sm-2">Service Request</dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Request.TrackingNumber)
         </dd>
     </dl>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.StatusHistoryId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model?.StatusHistoryId" class="btn btn-primary">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

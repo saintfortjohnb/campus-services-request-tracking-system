@@ -1,32 +1,22 @@
 @model IEnumerable<CampusServicesApp.Models.StatusHistory>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Status History";
 }
 
-<h1>Status</h1>
+<h1>Status History</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">Create New Status Entry</a>
 </p>
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.OldStatus)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewStatus)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ChangedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ChangedByNavigation)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Request)
-            </th>
+            <th>Old Status</th>
+            <th>New Status</th>
+            <th>Changed At</th>
+            <th>Changed By</th>
+            <th>Service Request</th>
             <th></th>
         </tr>
     </thead>

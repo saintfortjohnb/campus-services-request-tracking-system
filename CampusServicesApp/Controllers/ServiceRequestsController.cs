@@ -115,18 +115,45 @@ namespace CampusServicesApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("RequestId,TrackingNumber,RequesterId,CategoryId,TeamId,CurrentStatus,Description,CreatedAt,ClosedAt")] ServiceRequest serviceRequest)
+        public async Task<IActionResult> Edit(int id, [Bind("RequestId,TrackingNumber,RequesterId,CategoryId,TeamId,CurrentStatus,Description")] ServiceRequest serviceRequest)
         {
             if (id != serviceRequest.RequestId)
             {
                 return NotFound();
             }
 
+            ModelState.Remove(nameof(ServiceRequest.CreatedAt));
+            ModelState.Remove(nameof(ServiceRequest.ClosedAt));
+            ModelState.Remove(nameof(ServiceRequest.Category));
+            ModelState.Remove(nameof(ServiceRequest.Requester));
+            ModelState.Remove(nameof(ServiceRequest.Team));
+
             if (ModelState.IsValid)
             {
+                var existingRequest = await _context.ServiceRequests.FindAsync(id);
+                if (existingRequest == null)
+                {
+                    return NotFound();
+                }
+
+                existingRequest.TrackingNumber = serviceRequest.TrackingNumber;
+                existingRequest.RequesterId = serviceRequest.RequesterId;
+                existingRequest.CategoryId = serviceRequest.CategoryId;
+                existingRequest.TeamId = serviceRequest.TeamId;
+                existingRequest.CurrentStatus = serviceRequest.CurrentStatus;
+                existingRequest.Description = serviceRequest.Description;
+
+                if (string.Equals(existingRequest.CurrentStatus, "Closed", StringComparison.OrdinalIgnoreCase) && existingRequest.ClosedAt == null)
+                {
+                    existingRequest.ClosedAt = DateTime.Now;
+                }
+                else if (!string.Equals(existingRequest.CurrentStatus, "Closed", StringComparison.OrdinalIgnoreCase))
+                {
+                    existingRequest.ClosedAt = null;
+                }
+
                 try
                 {
-                    _context.Update(serviceRequest);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -142,6 +169,15 @@ namespace CampusServicesApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
+            foreach (var entry in ModelState)
+            {
+                foreach (var error in entry.Value.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, $"{entry.Key}: {error.ErrorMessage}");
+                }
+            }
+
             PopulateDropDowns(serviceRequest.CategoryId, serviceRequest.RequesterId, serviceRequest.TeamId);
             return View(serviceRequest);
         }
@@ -168,16 +204,35 @@ namespace CampusServicesApp.Controllers
         }
 
         // POST: ServiceRequests/Delete/5
-        [HttpPost, ActionName("Delete")]
+                [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var serviceRequest = await _context.ServiceRequests.FindAsync(id);
-            if (serviceRequest != null)
+            if (serviceRequest == null)
             {
-                _context.ServiceRequests.Remove(serviceRequest);
+                return RedirectToAction(nameof(Index));
             }
 
+            var relatedAssignments = await _context.Assignments
+                .Where(a => a.RequestId == id)
+                .ToListAsync();
+
+            if (relatedAssignments.Any())
+            {
+                _context.Assignments.RemoveRange(relatedAssignments);
+            }
+
+            var relatedStatusHistory = await _context.StatusHistories
+                .Where(s => s.RequestId == id)
+                .ToListAsync();
+
+            if (relatedStatusHistory.Any())
+            {
+                _context.StatusHistories.RemoveRange(relatedStatusHistory);
+            }
+
+            _context.ServiceRequests.Remove(serviceRequest);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
