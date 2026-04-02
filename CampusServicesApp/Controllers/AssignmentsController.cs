@@ -69,7 +69,15 @@ namespace CampusServicesApp.Controllers
             
             if (ModelState.IsValid)
             {
+                assignment.AssignedAt = DateTime.Now;
                 _context.Add(assignment);
+
+                var serviceRequest = await _context.ServiceRequests.FindAsync(assignment.RequestId);
+                if (serviceRequest != null)
+                {
+                    serviceRequest.CurrentStatus = "Assigned";
+                }
+
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }

@@ -6,14 +6,14 @@
 
 <h1>Create Category</h1>
 
-<h4>Category</h4>
+<h4>Category Information</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="All" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="CategoryName" class="control-label"></label>
+                <label asp-for="CategoryName" class="control-label">Category Name</label>
                 <input asp-for="CategoryName" class="form-control" />
                 <span asp-validation-for="CategoryName" class="text-danger"></span>
             </div>
@@ -24,7 +24,7 @@
                 </select>
                 <span asp-validation-for="DefaultTeamId" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group mt-3">
                 <input type="submit" value="Create Category" class="btn btn-primary" />
             </div>
         </form>

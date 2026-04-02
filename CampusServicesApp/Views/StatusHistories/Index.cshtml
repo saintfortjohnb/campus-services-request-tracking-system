@@ -7,9 +7,10 @@
 <h1>Status History</h1>
 
 <p>
-    <a asp-action="Create">Create New Status Entry</a>
+    <a asp-action="Create" class="btn btn-primary">Create New Status Entry</a>
 </p>
-<table class="table">
+
+<table class="table table-striped table-bordered">
     <thead>
         <tr>
             <th>Old Status</th>
@@ -17,11 +18,12 @@
             <th>Changed At</th>
             <th>Changed By</th>
             <th>Service Request</th>
-            <th></th>
+            <th style="width: 180px;">Actions</th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model)
+{
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.OldStatus)
@@ -39,9 +41,9 @@
                 @Html.DisplayFor(modelItem => item.Request.TrackingNumber)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.StatusHistoryId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.StatusHistoryId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.StatusHistoryId">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.StatusHistoryId" class="btn btn-sm btn-primary">Edit</a>
+                <a asp-action="Details" asp-route-id="@item.StatusHistoryId" class="btn btn-sm btn-info">Details</a>
+                <a asp-action="Delete" asp-route-id="@item.StatusHistoryId" class="btn btn-sm btn-danger">Delete</a>
             </td>
         </tr>
 }

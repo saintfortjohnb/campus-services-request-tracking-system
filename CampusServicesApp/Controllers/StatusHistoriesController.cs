@@ -21,7 +21,9 @@ namespace CampusServicesApp.Controllers
         // GET: StatusHistories
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.StatusHistories.Include(s => s.ChangedByNavigation).Include(s => s.Request);
+            var applicationDbContext = _context.StatusHistories
+                .Include(s => s.ChangedByNavigation)
+                .Include(s => s.Request);
             return View(await applicationDbContext.ToListAsync());
         }
 
@@ -54,8 +56,6 @@ namespace CampusServicesApp.Controllers
         }
 
         // POST: StatusHistories/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("RequestId,OldStatus,NewStatus,ChangedBy,ChangedAt")] StatusHistory statusHistory)
@@ -66,9 +66,26 @@ namespace CampusServicesApp.Controllers
             if (ModelState.IsValid)
             {
                 _context.Add(statusHistory);
+
+                var serviceRequest = await _context.ServiceRequests.FindAsync(statusHistory.RequestId);
+                if (serviceRequest != null)
+                {
+                    serviceRequest.CurrentStatus = statusHistory.NewStatus;
+
+                    if (string.Equals(statusHistory.NewStatus, "Closed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        serviceRequest.ClosedAt = DateTime.Now;
+                    }
+                    else
+                    {
+                        serviceRequest.ClosedAt = null;
+                    }
+                }
+
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["ChangedBy"] = new SelectList(_context.Users, "UserId", "Name", statusHistory.ChangedBy);
             ViewData["RequestId"] = new SelectList(_context.ServiceRequests, "RequestId", "TrackingNumber", statusHistory.RequestId);
             return View(statusHistory);
@@ -93,8 +110,6 @@ namespace CampusServicesApp.Controllers
         }
 
         // POST: StatusHistories/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("StatusHistoryId,RequestId,OldStatus,NewStatus,ChangedBy,ChangedAt")] StatusHistory statusHistory)
@@ -112,6 +127,22 @@ namespace CampusServicesApp.Controllers
                 try
                 {
                     _context.Update(statusHistory);
+
+                    var serviceRequest = await _context.ServiceRequests.FindAsync(statusHistory.RequestId);
+                    if (serviceRequest != null)
+                    {
+                        serviceRequest.CurrentStatus = statusHistory.NewStatus;
+
+                        if (string.Equals(statusHistory.NewStatus, "Closed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            serviceRequest.ClosedAt = DateTime.Now;
+                        }
+                        else
+                        {
+                            serviceRequest.ClosedAt = null;
+                        }
+                    }
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)

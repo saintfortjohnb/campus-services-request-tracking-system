@@ -6,7 +6,7 @@
 
 <h1>Edit Service Request</h1>
 
-<h4>Service Request</h4>
+<h4>Service Request Information</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -14,16 +14,16 @@
             <div asp-validation-summary="All" class="text-danger"></div>
             <input type="hidden" asp-for="RequestId" />
             <div class="form-group">
-                <label asp-for="TrackingNumber" class="control-label">Tracking Number</label>
-                <input asp-for="TrackingNumber" class="form-control" />
-                <span asp-validation-for="TrackingNumber" class="text-danger"></span>
+                <label class="control-label">Tracking Number</label>
+                <div>
+                    <span class="badge bg-primary">@Model.TrackingNumber</span>
+                </div>
             </div>
             <div class="form-group">
-                <label asp-for="RequesterId" class="control-label">Requester</label>
-                <select asp-for="RequesterId" class="form-control" asp-items="ViewBag.RequesterId">
-                    <option value="">-- Select Requester --</option>
-                </select>
-                <span asp-validation-for="RequesterId" class="text-danger"></span>
+                <label class="control-label">Requester</label>
+                <div>
+                    <span class="badge bg-secondary">@Model.Requester?.Name</span>
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="CategoryId" class="control-label">Category</label>
@@ -31,13 +31,6 @@
                     <option value="">-- Select Category --</option>
                 </select>
                 <span asp-validation-for="CategoryId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TeamId" class="control-label">Team</label>
-                <select asp-for="TeamId" class="form-control" asp-items="ViewBag.TeamId">
-                    <option value="">-- Select Team --</option>
-                </select>
-                <span asp-validation-for="TeamId" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CurrentStatus" class="control-label">Current Status</label>

@@ -7,7 +7,7 @@
 <h1>Status History Details</h1>
 
 <div>
-    <h4>Status History</h4>
+    <h4>Status History Information</h4>
     <hr />
     <dl class="row">
         <dt class="col-sm-2">Old Status</dt>
@@ -32,10 +32,11 @@
 
         <dt class="col-sm-2">Service Request</dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Request.TrackingNumber)
+            <span class="badge bg-primary">@Model.Request.TrackingNumber</span>
         </dd>
     </dl>
 </div>
+
 <div class="mt-3">
     <a asp-action="Edit" asp-route-id="@Model?.StatusHistoryId" class="btn btn-primary">Edit</a>
     <a asp-action="Index" class="btn btn-secondary">Back to List</a>

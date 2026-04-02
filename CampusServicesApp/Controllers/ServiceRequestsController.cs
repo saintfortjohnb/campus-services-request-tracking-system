@@ -21,8 +21,43 @@ namespace CampusServicesApp.Controllers
         // GET: ServiceRequests
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.ServiceRequests.Include(s => s.Category).Include(s => s.Requester).Include(s => s.Team);
-            return View(await applicationDbContext.ToListAsync());
+            var openRequests = await _context.ServiceRequests
+                .Include(s => s.Category)
+                .Include(s => s.Requester)
+                .Include(s => s.Team)
+                .Where(s => s.CurrentStatus != "Resolved" && s.CurrentStatus != "Closed")
+                .ToListAsync();
+
+            ViewData["Title"] = "Open Requests";
+            return View(openRequests);
+        }
+
+        // GET: ServiceRequests/Resolved
+        public async Task<IActionResult> Resolved()
+        {
+            var resolvedRequests = await _context.ServiceRequests
+                .Include(s => s.Category)
+                .Include(s => s.Requester)
+                .Include(s => s.Team)
+                .Where(s => s.CurrentStatus == "Resolved")
+                .ToListAsync();
+
+            ViewData["Title"] = "Resolved Requests";
+            return View("Index", resolvedRequests);
+        }
+
+        // GET: ServiceRequests/Closed
+        public async Task<IActionResult> Closed()
+        {
+            var closedRequests = await _context.ServiceRequests
+                .Include(s => s.Category)
+                .Include(s => s.Requester)
+                .Include(s => s.Team)
+                .Where(s => s.CurrentStatus == "Closed")
+                .ToListAsync();
+
+            ViewData["Title"] = "Closed Requests";
+            return View("Index", closedRequests);
         }
 
         // GET: ServiceRequests/Details/5
@@ -54,22 +89,41 @@ namespace CampusServicesApp.Controllers
         }
 
         // POST: ServiceRequests/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("TrackingNumber,RequesterId,CategoryId,TeamId,CurrentStatus,Description")] ServiceRequest serviceRequest)
+        public async Task<IActionResult> Create([Bind("RequesterId,CategoryId,Description")] ServiceRequest serviceRequest)
         {
             serviceRequest.CreatedAt = DateTime.Now;
             serviceRequest.ClosedAt = null;
 
-            if (string.IsNullOrWhiteSpace(serviceRequest.CurrentStatus))
+            var selectedCategory = await _context.Categories
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CategoryId == serviceRequest.CategoryId);
+
+            if (selectedCategory == null)
             {
-                serviceRequest.CurrentStatus = "Open";
+                ModelState.AddModelError(nameof(ServiceRequest.CategoryId), "Please select a valid category.");
             }
+            else
+            {
+                serviceRequest.TeamId = selectedCategory.DefaultTeamId;
+            }
+
+            var currentYear = DateTime.Now.Year;
+            var yearSuffix = currentYear % 100;
+
+            var countForYear = await _context.ServiceRequests
+                .CountAsync(r => r.CreatedAt.Year == currentYear);
+
+            var nextNumber = countForYear + 1;
+            serviceRequest.TrackingNumber = $"REQ-{yearSuffix}-{nextNumber:D3}";
+
+            serviceRequest.CurrentStatus = "Submitted";
 
             ModelState.Remove(nameof(ServiceRequest.CreatedAt));
             ModelState.Remove(nameof(ServiceRequest.ClosedAt));
+            ModelState.Remove(nameof(ServiceRequest.TrackingNumber));
+            ModelState.Remove(nameof(ServiceRequest.CurrentStatus));
             ModelState.Remove(nameof(ServiceRequest.Category));
             ModelState.Remove(nameof(ServiceRequest.Requester));
             ModelState.Remove(nameof(ServiceRequest.Team));
@@ -80,7 +134,7 @@ namespace CampusServicesApp.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            
+
             foreach (var entry in ModelState)
             {
                 foreach (var error in entry.Value.Errors)
@@ -89,7 +143,7 @@ namespace CampusServicesApp.Controllers
                 }
             }
 
-            PopulateDropDowns(serviceRequest.CategoryId, serviceRequest.RequesterId, serviceRequest.TeamId);
+            PopulateDropDowns(serviceRequest.CategoryId, serviceRequest.RequesterId);
             return View(serviceRequest);
         }
 
@@ -101,21 +155,23 @@ namespace CampusServicesApp.Controllers
                 return NotFound();
             }
 
-            var serviceRequest = await _context.ServiceRequests.FindAsync(id);
+            var serviceRequest = await _context.ServiceRequests
+                .Include(s => s.Requester)
+                .FirstOrDefaultAsync(s => s.RequestId == id);
+
             if (serviceRequest == null)
             {
                 return NotFound();
             }
+
             PopulateDropDowns(serviceRequest.CategoryId, serviceRequest.RequesterId, serviceRequest.TeamId);
             return View(serviceRequest);
         }
 
         // POST: ServiceRequests/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("RequestId,TrackingNumber,RequesterId,CategoryId,TeamId,CurrentStatus,Description")] ServiceRequest serviceRequest)
+        public async Task<IActionResult> Edit(int id, [Bind("RequestId,CategoryId,CurrentStatus,Description")] ServiceRequest serviceRequest)
         {
             if (id != serviceRequest.RequestId)
             {
@@ -124,50 +180,63 @@ namespace CampusServicesApp.Controllers
 
             ModelState.Remove(nameof(ServiceRequest.CreatedAt));
             ModelState.Remove(nameof(ServiceRequest.ClosedAt));
+            ModelState.Remove(nameof(ServiceRequest.TrackingNumber));
             ModelState.Remove(nameof(ServiceRequest.Category));
             ModelState.Remove(nameof(ServiceRequest.Requester));
             ModelState.Remove(nameof(ServiceRequest.Team));
 
+            var existingRequest = await _context.ServiceRequests.FindAsync(id);
+            if (existingRequest == null)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
-                var existingRequest = await _context.ServiceRequests.FindAsync(id);
-                if (existingRequest == null)
+                var selectedCategory = await _context.Categories
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.CategoryId == serviceRequest.CategoryId);
+
+                if (selectedCategory == null)
                 {
-                    return NotFound();
+                    ModelState.AddModelError(nameof(ServiceRequest.CategoryId), "Please select a valid category.");
+                }
+                else
+                {
+                    existingRequest.CategoryId = serviceRequest.CategoryId;
+                    existingRequest.TeamId = selectedCategory.DefaultTeamId;
+                    existingRequest.CurrentStatus = serviceRequest.CurrentStatus;
+                    existingRequest.Description = serviceRequest.Description;
                 }
 
-                existingRequest.TrackingNumber = serviceRequest.TrackingNumber;
-                existingRequest.RequesterId = serviceRequest.RequesterId;
-                existingRequest.CategoryId = serviceRequest.CategoryId;
-                existingRequest.TeamId = serviceRequest.TeamId;
-                existingRequest.CurrentStatus = serviceRequest.CurrentStatus;
-                existingRequest.Description = serviceRequest.Description;
-
-                if (string.Equals(existingRequest.CurrentStatus, "Closed", StringComparison.OrdinalIgnoreCase) && existingRequest.ClosedAt == null)
+                if (ModelState.IsValid)
                 {
-                    existingRequest.ClosedAt = DateTime.Now;
-                }
-                else if (!string.Equals(existingRequest.CurrentStatus, "Closed", StringComparison.OrdinalIgnoreCase))
-                {
-                    existingRequest.ClosedAt = null;
-                }
-
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ServiceRequestExists(serviceRequest.RequestId))
+                    if (string.Equals(existingRequest.CurrentStatus, "Closed", StringComparison.OrdinalIgnoreCase) && existingRequest.ClosedAt == null)
                     {
-                        return NotFound();
+                        existingRequest.ClosedAt = DateTime.Now;
                     }
-                    else
+                    else if (!string.Equals(existingRequest.CurrentStatus, "Closed", StringComparison.OrdinalIgnoreCase))
                     {
-                        throw;
+                        existingRequest.ClosedAt = null;
                     }
+
+                    try
+                    {
+                        await _context.SaveChangesAsync();
+                    }
+                    catch (DbUpdateConcurrencyException)
+                    {
+                        if (!ServiceRequestExists(serviceRequest.RequestId))
+                        {
+                            return NotFound();
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                    return RedirectToAction(nameof(Index));
                 }
-                return RedirectToAction(nameof(Index));
             }
 
             foreach (var entry in ModelState)
@@ -176,6 +245,18 @@ namespace CampusServicesApp.Controllers
                 {
                     ModelState.AddModelError(string.Empty, $"{entry.Key}: {error.ErrorMessage}");
                 }
+            }
+
+            serviceRequest.RequesterId = existingRequest.RequesterId;
+            serviceRequest.TeamId = existingRequest.TeamId;
+            serviceRequest.TrackingNumber = existingRequest.TrackingNumber;
+            serviceRequest.CreatedAt = existingRequest.CreatedAt;
+            serviceRequest.ClosedAt = existingRequest.ClosedAt;
+            
+            var requester = await _context.Users.FindAsync(existingRequest.RequesterId);
+            if (requester != null)
+            {
+                serviceRequest.Requester = requester;
             }
 
             PopulateDropDowns(serviceRequest.CategoryId, serviceRequest.RequesterId, serviceRequest.TeamId);
@@ -204,7 +285,7 @@ namespace CampusServicesApp.Controllers
         }
 
         // POST: ServiceRequests/Delete/5
-                [HttpPost, ActionName("Delete")]
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {

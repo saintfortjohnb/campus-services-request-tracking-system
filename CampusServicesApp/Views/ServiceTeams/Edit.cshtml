@@ -1,42 +1,46 @@
 @model CampusServicesApp.Models.ServiceTeam
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Service Team";
 }
 
-<h1>Edit</h1>
+<h1>Edit Service Team</h1>
 
-<h4>ServiceTeam</h4>
+<h4>Team Information</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="All" class="text-danger"></div>
             <input type="hidden" asp-for="TeamId" />
+
             <div class="form-group">
                 <label asp-for="TeamName" class="control-label">Team Name</label>
                 <input asp-for="TeamName" class="form-control" />
                 <span asp-validation-for="TeamName" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="TeamEmail" class="control-label">Team Email</label>
                 <input asp-for="TeamEmail" class="form-control" />
                 <span asp-validation-for="TeamEmail" class="text-danger"></span>
             </div>
+
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
+                    <input class="form-check-input" asp-for="IsActive" /> Active
                 </label>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <div class="form-group mt-3">
+                <input type="submit" value="Save Changes" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>
 
 @section Scripts {

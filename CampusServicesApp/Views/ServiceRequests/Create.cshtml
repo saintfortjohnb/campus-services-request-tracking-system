@@ -6,49 +6,32 @@
 
 <h1>Create Service Request</h1>
 
-<h4>Service Request</h4>
+<h4>Service Request Information</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="All" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="TrackingNumber" class="control-label">Tracking Number</label>
-                <input asp-for="TrackingNumber" class="form-control" />
-                <span asp-validation-for="TrackingNumber" class="text-danger"></span>
-            </div>
-            <div class="form-group">
                 <label asp-for="RequesterId" class="control-label">Requester</label>
-                <select asp-for="RequesterId" class ="form-control" asp-items="ViewBag.RequesterId">
+                <select asp-for="RequesterId" class="form-control" asp-items="ViewBag.RequesterId">
                     <option value="">-- Select Requester --</option>
                 </select>
                 <span asp-validation-for="RequesterId" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CategoryId" class="control-label">Category</label>
-                <select asp-for="CategoryId" class ="form-control" asp-items="ViewBag.CategoryId">
+                <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.CategoryId">
                     <option value="">-- Select Category --</option>
                 </select>
                 <span asp-validation-for="CategoryId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TeamId" class="control-label">Team</label>
-                <select asp-for="TeamId" class ="form-control" asp-items="ViewBag.TeamId">
-                    <option value="">-- Select Team --</option>
-                </select>
-                <span asp-validation-for="TeamId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CurrentStatus" class="control-label">Current Status</label>
-                <input asp-for="CurrentStatus" class="form-control" />
-                <span asp-validation-for="CurrentStatus" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Description" class="control-label">Description</label>
                 <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group mt-3">
                 <input type="submit" value="Create Request" class="btn btn-primary" />
             </div>
         </form>

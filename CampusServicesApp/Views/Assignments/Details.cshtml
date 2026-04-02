@@ -1,42 +1,38 @@
 @model CampusServicesApp.Models.Assignment
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Assignment Details";
 }
 
-<h1>Details</h1>
+<h1>Assignment Details</h1>
 
 <div>
-    <h4>Assignment</h4>
+    <h4>Assignment Information</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AssignedAt)
-        </dt>
-        <dd class = "col-sm-10">
+        <dt class="col-sm-2">Assigned Date</dt>
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.AssignedAt)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AssignedByNavigation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AssignedByNavigation.UserId)
+
+        <dt class="col-sm-2">Assigned By</dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.AssignedByNavigation.Name)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Request)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Request.RequestId)
+
+        <dt class="col-sm-2">Service Request</dt>
+        <dd class="col-sm-10">
+            <span class="badge bg-primary">@Model.Request.TrackingNumber</span>
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Technician)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Technician.UserId)
+
+        <dt class="col-sm-2">Technician</dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Technician.Name)
         </dd>
     </dl>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.AssignmentId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model?.AssignmentId" class="btn btn-primary">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

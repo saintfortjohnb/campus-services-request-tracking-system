@@ -1,49 +1,36 @@
 @model IEnumerable<CampusServicesApp.Models.ServiceRequest>
 
 @{
-    ViewData["Title"] = "Service Requests";
+    ViewData["Title"] = ViewData["Title"] ?? "Open Requests";
 }
 
-<h1>Service Requests</h1>
+<h1>@ViewData["Title"]</h1>
 
 <p>
-    <a asp-action="Create">Create New Request</a>
+    <a asp-action="Create" class="btn btn-primary">Create New Request</a>
+    <a asp-action="Index" class="btn btn-secondary">Open Requests</a>
+    <a asp-action="Resolved" class="btn btn-success">Resolved Requests</a>
+    <a asp-action="Closed" class="btn btn-dark">Closed Requests</a>
 </p>
-<table class="table">
+
+<table class="table table-striped table-bordered">
     <thead>
         <tr>
-            <th>
-                Tracking Number
-            </th>
-            <th>
-                Current Status
-            </th>
-            <th>
-                Description
-            </th>
-            <th>
-                Created At
-            </th>
-            <th>
-                Closed At
-            </th>
-            <th>
-                Category
-            </th>
-            <th>
-                Requester
-            </th>
-            <th>
-                Team
-            </th>
-            <th></th>
+            <th>Tracking Number</th>
+            <th>Current Status</th>
+            <th>Description</th>
+            <th>@(ViewData["Title"]?.ToString() == "Closed Requests" ? "Closed At" : "Created At")</th>
+            <th>Category</th>
+            <th>Requester</th>
+            <th style="width: 180px;">Actions</th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model)
+{
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.TrackingNumber)
+                <span class="badge bg-primary">@item.TrackingNumber</span>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.CurrentStatus)
@@ -52,10 +39,9 @@
                 @Html.DisplayFor(modelItem => item.Description)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ClosedAt)
+                @(ViewData["Title"]?.ToString() == "Closed Requests" 
+                    ? item.ClosedAt?.ToString("g") 
+                    : item.CreatedAt.ToString("g"))
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Category.CategoryName)
@@ -64,12 +50,9 @@
                 @Html.DisplayFor(modelItem => item.Requester.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Team.TeamName)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.RequestId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.RequestId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.RequestId">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.RequestId" class="btn btn-sm btn-primary">Edit</a>
+                <a asp-action="Details" asp-route-id="@item.RequestId" class="btn btn-sm btn-info">Details</a>
+                <a asp-action="Delete" asp-route-id="@item.RequestId" class="btn btn-sm btn-danger">Delete</a>
             </td>
         </tr>
 }

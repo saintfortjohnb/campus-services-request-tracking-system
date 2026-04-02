@@ -1,8 +1,72 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="display-4">Campus Services Request & Tracking System</h1>
+        <p class="lead">Manage, track, and resolve campus service requests efficiently.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Service Requests</h5>
+                    <p class="card-text">View and manage all service requests.</p>
+                    <a asp-controller="ServiceRequests" asp-action="Index" class="btn btn-primary">Go to Requests</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Assignments</h5>
+                    <p class="card-text">Assign requests to technicians.</p>
+                    <a asp-controller="Assignments" asp-action="Index" class="btn btn-primary">Go to Assignments</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Status History</h5>
+                    <p class="card-text">Track request status changes.</p>
+                    <a asp-controller="StatusHistories" asp-action="Index" class="btn btn-primary">View History</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Users</h5>
+                    <p class="card-text">Manage system users.</p>
+                    <a asp-controller="Users" asp-action="Index" class="btn btn-secondary">Manage Users</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Categories</h5>
+                    <p class="card-text">Manage request categories.</p>
+                    <a asp-controller="Categories" asp-action="Index" class="btn btn-secondary">Manage Categories</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Service Teams</h5>
+                    <p class="card-text">Manage service teams.</p>
+                    <a asp-controller="ServiceTeams" asp-action="Index" class="btn btn-secondary">Manage Teams</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

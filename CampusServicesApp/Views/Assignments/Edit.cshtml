@@ -6,7 +6,7 @@
 
 <h1>Edit Assignment</h1>
 
-<h4>Assignment</h4>
+<h4>Assignment Information</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -21,8 +21,10 @@
                 <span asp-validation-for="RequestId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="TechnicianId" class="control-label"></label>
-                <select asp-for="TechnicianId" class="form-control" asp-items="ViewBag.TechnicianId"></select>
+                <label asp-for="TechnicianId" class="control-label">Technician</label>
+                <select asp-for="TechnicianId" class="form-control" asp-items="ViewBag.TechnicianId">
+                    <option value="">-- Select Technician --</option>
+                </select>
                 <span asp-validation-for="TechnicianId" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -32,12 +34,12 @@
                 </select>
                 <span asp-validation-for="AssignedBy" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="AssignedAt" class="control-label"></label>
+            <div class="form-group mt-2">
+                <label asp-for="AssignedAt" class="control-label">Assigned Date</label>
                 <input asp-for="AssignedAt" class="form-control" />
                 <span asp-validation-for="AssignedAt" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group mt-3">
                 <input type="submit" value="Save Changes" class="btn btn-primary" />
             </div>
         </form>

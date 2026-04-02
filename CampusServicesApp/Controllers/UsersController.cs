@@ -103,9 +103,18 @@ namespace CampusServicesApp.Controllers
 
             if (ModelState.IsValid)
             {
+                var existingUser = await _context.Users.FindAsync(id);
+                if (existingUser == null)
+                {
+                    return NotFound();
+                }
+
+                existingUser.Name = user.Name;
+                existingUser.Email = user.Email;
+                existingUser.RoleId = user.RoleId;
+
                 try
                 {
-                    _context.Update(user);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -149,17 +158,31 @@ namespace CampusServicesApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
+            if (user == null)
             {
-                _context.Users.Remove(user);
+                return RedirectToAction(nameof(Index));
             }
 
+            var isRequester = await _context.ServiceRequests.AnyAsync(r => r.RequesterId == id);
+            var isTechnician = await _context.Assignments.AnyAsync(a => a.TechnicianId == id);
+            var isAssignedBy = await _context.Assignments.AnyAsync(a => a.AssignedBy == id);
+            var changedStatus = await _context.StatusHistories.AnyAsync(s => s.ChangedBy == id);
+
+            if (isRequester || isTechnician || isAssignedBy || changedStatus)
+            {
+                ModelState.AddModelError(string.Empty, "This user cannot be deleted because they are still linked to service requests, assignments, or status history records.");
+                return View("Delete", user);
+            }
+
+            _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
-        private bool UserExists(int id)
+                private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.UserId == id);
         }
