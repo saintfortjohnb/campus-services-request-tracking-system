@@ -15,7 +15,21 @@
 
 <h1>Service Request Details</h1>
 
-<h4>Service Request Information</h4>
+<div class="d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">Service Request Information</h4>
+    <div class="d-flex gap-2">
+        <a asp-action="ExportRequestCsv"
+           asp-route-id="@Model.RequestId"
+           class="btn btn-outline-primary btn-sm">
+            Export CSV
+        </a>
+        <a asp-action="ExportRequestPdf"
+           asp-route-id="@Model.RequestId"
+           class="btn btn-outline-danger btn-sm">
+            Export PDF
+        </a>
+    </div>
+</div>
 <hr />
 <div>
     <dl class="row">

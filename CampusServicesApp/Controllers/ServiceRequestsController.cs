@@ -2,11 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CampusServicesApp.Models;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace CampusServicesApp.Controllers
 {
@@ -103,6 +107,151 @@ namespace CampusServicesApp.Controllers
             }
 
             return View(serviceRequest);
+        }
+
+        public async Task<IActionResult> ExportRequestCsv(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var serviceRequest = await _context.ServiceRequests
+                .Include(s => s.Category)
+                .Include(s => s.Requester)
+                .Include(s => s.Team)
+                .Include(s => s.Notes)
+                    .ThenInclude(n => n.Author)
+                .FirstOrDefaultAsync(m => m.RequestId == id);
+
+            if (serviceRequest == null)
+            {
+                return NotFound();
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Field,Value");
+            sb.AppendLine($"Tracking Number,\"{EscapeCsv(serviceRequest.TrackingNumber)}\"");
+            sb.AppendLine($"Current Status,\"{EscapeCsv(serviceRequest.CurrentStatus)}\"");
+            sb.AppendLine($"Category,\"{EscapeCsv(serviceRequest.Category?.CategoryName)}\"");
+            sb.AppendLine($"Requester,\"{EscapeCsv(serviceRequest.Requester?.Name)}\"");
+            sb.AppendLine($"Created At,\"{serviceRequest.CreatedAt:g}\"");
+            sb.AppendLine($"Description,\"{EscapeCsv(serviceRequest.Description)}\"");
+            sb.AppendLine();
+            sb.AppendLine("Created At,Author,Note");
+
+            foreach (var note in serviceRequest.Notes.OrderByDescending(n => n.CreatedAt))
+            {
+                sb.AppendLine($"\"{note.CreatedAt:g}\",\"{EscapeCsv(note.Author?.Name)}\",\"{EscapeCsv(note.NoteText)}\"");
+            }
+
+            var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+            var fileName = $"{serviceRequest.TrackingNumber}-details.csv";
+            return File(bytes, "text/csv", fileName);
+        }
+
+        public async Task<IActionResult> ExportRequestPdf(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var serviceRequest = await _context.ServiceRequests
+                .Include(s => s.Category)
+                .Include(s => s.Requester)
+                .Include(s => s.Team)
+                .Include(s => s.Notes)
+                    .ThenInclude(n => n.Author)
+                .FirstOrDefaultAsync(m => m.RequestId == id);
+
+            if (serviceRequest == null)
+            {
+                return NotFound();
+            }
+
+            QuestPDF.Settings.License = LicenseType.Community;
+
+            var pdfBytes = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(24);
+                    page.Size(PageSizes.A4);
+                    page.DefaultTextStyle(x => x.FontSize(10));
+
+                    page.Header().Column(column =>
+                    {
+                        column.Item().Text("Service Request Details")
+                            .FontSize(18)
+                            .Bold();
+                        column.Item().Text($"Tracking Number: {serviceRequest.TrackingNumber}");
+                    });
+
+                    page.Content().Column(column =>
+                    {
+                        column.Spacing(8);
+                        column.Item().Text($"Current Status: {serviceRequest.CurrentStatus}");
+                        column.Item().Text($"Category: {serviceRequest.Category?.CategoryName ?? string.Empty}");
+                        column.Item().Text($"Requester: {serviceRequest.Requester?.Name ?? string.Empty}");
+                        column.Item().Text($"Created At: {serviceRequest.CreatedAt:g}");
+
+                        column.Item().PaddingTop(6).Text("Description").Bold();
+                        column.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(8)
+                            .Text(serviceRequest.Description ?? string.Empty);
+
+                        column.Item().PaddingTop(12).Text("Work Log / Notes").Bold();
+                        column.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(1.3f);
+                                columns.RelativeColumn(1f);
+                                columns.RelativeColumn(3f);
+                            });
+
+                            table.Header(header =>
+                            {
+                                header.Cell().Element(CellStyle).Text("Created At").Bold();
+                                header.Cell().Element(CellStyle).Text("Author").Bold();
+                                header.Cell().Element(CellStyle).Text("Note").Bold();
+                            });
+
+                            foreach (var note in serviceRequest.Notes.OrderByDescending(n => n.CreatedAt))
+                            {
+                                table.Cell().Element(CellStyle).Text(note.CreatedAt.ToString("g"));
+                                table.Cell().Element(CellStyle).Text(note.Author?.Name ?? string.Empty);
+                                table.Cell().Element(CellStyle).Text(note.NoteText ?? string.Empty);
+                            }
+
+                            static IContainer CellStyle(IContainer container)
+                            {
+                                return container
+                                    .BorderBottom(1)
+                                    .BorderColor(Colors.Grey.Lighten2)
+                                    .PaddingVertical(6)
+                                    .PaddingHorizontal(4);
+                            }
+                        });
+                    });
+
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("Page ");
+                        text.CurrentPageNumber();
+                        text.Span(" of ");
+                        text.TotalPages();
+                    });
+                });
+            }).GeneratePdf();
+
+            var fileName = $"{serviceRequest.TrackingNumber}-details.pdf";
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+
+        private static string EscapeCsv(string? value)
+        {
+            return (value ?? string.Empty).Replace("\"", "\"\"");
         }
 
         // GET: ServiceRequests/Create
