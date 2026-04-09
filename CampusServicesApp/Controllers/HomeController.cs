@@ -4,6 +4,9 @@ using CampusServicesApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System.Text;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace CampusServicesApp.Controllers;
 
@@ -33,27 +36,17 @@ public class HomeController : Controller
                roles.Any(r => string.Equals(r, roleName, StringComparison.OrdinalIgnoreCase));
     }
 
-    public IActionResult Index()
-    {
-        return View();
-    }
+    public IActionResult Index() => View();
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+    public IActionResult Privacy() => View();
 
     public async Task<IActionResult> ReportingDashboard()
     {
         if (!IsLoggedIn())
-        {
             return RedirectToAction("Login", "Account");
-        }
 
         if (!HasRole("Admin", "Manager"))
-        {
             return RedirectToAction("Index", "Home");
-        }
 
         var model = new ReportingDashboardViewModel
         {
@@ -81,37 +74,22 @@ public class HomeController : Controller
         return View(model);
     }
 
-    public async Task<IActionResult> ExportCsv(string? status, string? categoryName, DateTime? startDate, DateTime? endDate)
+    // 🔹 Shared Filter Logic
+    private IQueryable<ServiceRequest> BuildFilteredRequestsQuery(string? status, string? categoryName, DateTime? startDate, DateTime? endDate)
     {
-        if (!IsLoggedIn())
-        {
-            return RedirectToAction("Login", "Account");
-        }
-
-        if (!HasRole("Admin", "Manager"))
-        {
-            return RedirectToAction("Index", "Home");
-        }
-
         var query = _context.ServiceRequests
             .Include(r => r.Category)
             .Include(r => r.Requester)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(status))
-        {
             query = query.Where(r => r.CurrentStatus == status);
-        }
 
         if (!string.IsNullOrWhiteSpace(categoryName))
-        {
             query = query.Where(r => r.Category != null && r.Category.CategoryName == categoryName);
-        }
 
         if (startDate.HasValue)
-        {
             query = query.Where(r => r.CreatedAt >= startDate.Value);
-        }
 
         if (endDate.HasValue)
         {
@@ -119,42 +97,89 @@ public class HomeController : Controller
             query = query.Where(r => r.CreatedAt < inclusiveEndDate);
         }
 
-        var requests = await query
-            .OrderBy(r => r.CreatedAt)
-            .ToListAsync();
+        return query.OrderBy(r => r.CreatedAt);
+    }
+
+    // 🔹 PDF EXPORT
+    public async Task<IActionResult> ExportPdf(string? status, string? categoryName, DateTime? startDate, DateTime? endDate)
+    {
+        if (!IsLoggedIn())
+            return RedirectToAction("Login", "Account");
+
+        if (!HasRole("Admin", "Manager"))
+            return RedirectToAction("Index", "Home");
+
+        var requests = await BuildFilteredRequestsQuery(status, categoryName, startDate, endDate).ToListAsync();
+
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        var pdfBytes = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(20);
+                page.Size(PageSizes.A4.Landscape());
+
+                page.Header().Text("Service Requests Report").Bold().FontSize(18);
+
+                page.Content().Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.RelativeColumn();
+                        columns.RelativeColumn();
+                        columns.RelativeColumn();
+                        columns.RelativeColumn();
+                        columns.RelativeColumn();
+                        columns.RelativeColumn();
+                    });
+
+                    table.Header(header =>
+                    {
+                        header.Cell().Text("Tracking #").Bold();
+                        header.Cell().Text("Status").Bold();
+                        header.Cell().Text("Category").Bold();
+                        header.Cell().Text("Requester").Bold();
+                        header.Cell().Text("Created").Bold();
+                        header.Cell().Text("Closed").Bold();
+                    });
+
+                    foreach (var r in requests)
+                    {
+                        table.Cell().Text(r.TrackingNumber);
+                        table.Cell().Text(r.CurrentStatus);
+                        table.Cell().Text(r.Category?.CategoryName ?? "");
+                        table.Cell().Text(r.Requester?.Name ?? "");
+                        table.Cell().Text(r.CreatedAt.ToString("g"));
+                        table.Cell().Text(r.ClosedAt?.ToString("g") ?? "");
+                    }
+                });
+            });
+        }).GeneratePdf();
+
+        return File(pdfBytes, "application/pdf", "report.pdf");
+    }
+
+    // 🔹 CSV EXPORT (UPDATED)
+    public async Task<IActionResult> ExportCsv(string? status, string? categoryName, DateTime? startDate, DateTime? endDate)
+    {
+        if (!IsLoggedIn())
+            return RedirectToAction("Login", "Account");
+
+        if (!HasRole("Admin", "Manager"))
+            return RedirectToAction("Index", "Home");
+
+        var requests = await BuildFilteredRequestsQuery(status, categoryName, startDate, endDate).ToListAsync();
 
         var sb = new StringBuilder();
         sb.AppendLine("TrackingNumber,Status,Category,Requester,CreatedAt,ClosedAt");
 
         foreach (var request in requests)
         {
-            var trackingNumber = EscapeCsv(request.TrackingNumber);
-            var currentStatus = EscapeCsv(request.CurrentStatus);
-            var category = EscapeCsv(request.Category?.CategoryName ?? string.Empty);
-            var requester = EscapeCsv(request.Requester?.Name ?? string.Empty);
-            var createdAt = request.CreatedAt.ToString("g");
-            var closedAt = request.ClosedAt?.ToString("g") ?? string.Empty;
-
-            sb.AppendLine($"{trackingNumber},{currentStatus},{category},{requester},{createdAt},{closedAt}");
+            sb.AppendLine($"{request.TrackingNumber},{request.CurrentStatus},{request.Category?.CategoryName},{request.Requester?.Name},{request.CreatedAt:g},{request.ClosedAt:g}");
         }
 
-        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
-        return File(bytes, "text/csv", "service-requests-report-filtered.csv");
-    }
-
-    private static string EscapeCsv(string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return string.Empty;
-        }
-
-        if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
-        {
-            return $"\"{value.Replace("\"", "\"\"")}\"";
-        }
-
-        return value;
+        return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", "report.csv");
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

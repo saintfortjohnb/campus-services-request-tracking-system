@@ -37,13 +37,22 @@
                 <input id="startDate" name="startDate" type="date" class="form-control" />
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <label for="endDate" class="form-label">End Date</label>
                 <input id="endDate" name="endDate" type="date" class="form-control" />
             </div>
 
-            <div class="col-md-2 d-grid">
+            <div class="col-md-1 d-grid">
                 <button type="submit" class="btn btn-outline-primary">Export CSV</button>
+            </div>
+
+            <div class="col-md-1 d-grid">
+                <button type="submit"
+                        formaction="@Url.Action("ExportPdf", "Home")"
+                        formmethod="get"
+                        class="btn btn-outline-danger">
+                    Export PDF
+                </button>
             </div>
         </div>
     </div>
