@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +61,27 @@ namespace CampusServicesApp.Controllers
             return View("Index", closedRequests);
         }
 
+        // GET: ServiceRequests/MyAssignments
+        public async Task<IActionResult> MyAssignments()
+        {
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (currentUserId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var assignedRequests = await _context.ServiceRequests
+                .Include(s => s.Category)
+                .Include(s => s.Requester)
+                .Include(s => s.Team)
+                .Where(s => s.CurrentStatus != "Resolved" && s.CurrentStatus != "Closed")
+                .Where(s => _context.Assignments.Any(a => a.RequestId == s.RequestId && a.TechnicianId == currentUserId.Value))
+                .ToListAsync();
+
+            ViewData["Title"] = "My Assigned Requests";
+            return View("Index", assignedRequests);
+        }
+
         // GET: ServiceRequests/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -72,6 +94,8 @@ namespace CampusServicesApp.Controllers
                 .Include(s => s.Category)
                 .Include(s => s.Requester)
                 .Include(s => s.Team)
+                .Include(s => s.Notes)
+                    .ThenInclude(n => n.Author)
                 .FirstOrDefaultAsync(m => m.RequestId == id);
             if (serviceRequest == null)
             {
@@ -84,8 +108,14 @@ namespace CampusServicesApp.Controllers
         // GET: ServiceRequests/Create
         public IActionResult Create()
         {
-            PopulateDropDowns();
-            return View();
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (currentUserId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            PopulateDropDowns(requesterId: currentUserId.Value);
+            return View(new ServiceRequest { RequesterId = currentUserId.Value });
         }
 
         // POST: ServiceRequests/Create
@@ -93,6 +123,13 @@ namespace CampusServicesApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("RequesterId,CategoryId,Description")] ServiceRequest serviceRequest)
         {
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (currentUserId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            serviceRequest.RequesterId = currentUserId.Value;
             serviceRequest.CreatedAt = DateTime.Now;
             serviceRequest.ClosedAt = null;
 
@@ -132,6 +169,17 @@ namespace CampusServicesApp.Controllers
             {
                 _context.Add(serviceRequest);
                 await _context.SaveChangesAsync();
+
+                _context.StatusHistories.Add(new StatusHistory
+                {
+                    RequestId = serviceRequest.RequestId,
+                    OldStatus = null,
+                    NewStatus = serviceRequest.CurrentStatus,
+                    ChangedBy = serviceRequest.RequesterId,
+                    ChangedAt = DateTime.Now
+                });
+
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
 
@@ -143,7 +191,7 @@ namespace CampusServicesApp.Controllers
                 }
             }
 
-            PopulateDropDowns(serviceRequest.CategoryId, serviceRequest.RequesterId);
+            PopulateDropDowns(serviceRequest.CategoryId, currentUserId.Value);
             return View(serviceRequest);
         }
 
@@ -203,10 +251,26 @@ namespace CampusServicesApp.Controllers
                 }
                 else
                 {
+                    var oldStatus = existingRequest.CurrentStatus;
+
                     existingRequest.CategoryId = serviceRequest.CategoryId;
                     existingRequest.TeamId = selectedCategory.DefaultTeamId;
                     existingRequest.CurrentStatus = serviceRequest.CurrentStatus;
                     existingRequest.Description = serviceRequest.Description;
+
+                    if (!string.Equals(oldStatus, existingRequest.CurrentStatus, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var currentUserId = HttpContext.Session.GetInt32("UserId");
+
+                        _context.StatusHistories.Add(new StatusHistory
+                        {
+                            RequestId = existingRequest.RequestId,
+                            OldStatus = oldStatus,
+                            NewStatus = existingRequest.CurrentStatus,
+                            ChangedBy = currentUserId ?? existingRequest.RequesterId,
+                            ChangedAt = DateTime.Now
+                        });
+                    }
                 }
 
                 if (ModelState.IsValid)
@@ -252,7 +316,7 @@ namespace CampusServicesApp.Controllers
             serviceRequest.TrackingNumber = existingRequest.TrackingNumber;
             serviceRequest.CreatedAt = existingRequest.CreatedAt;
             serviceRequest.ClosedAt = existingRequest.ClosedAt;
-            
+
             var requester = await _context.Users.FindAsync(existingRequest.RequesterId);
             if (requester != null)
             {
@@ -311,6 +375,15 @@ namespace CampusServicesApp.Controllers
             if (relatedStatusHistory.Any())
             {
                 _context.StatusHistories.RemoveRange(relatedStatusHistory);
+            }
+
+            var relatedNotes = await _context.Notes
+                .Where(n => n.RequestId == id)
+                .ToListAsync();
+
+            if (relatedNotes.Any())
+            {
+                _context.Notes.RemoveRange(relatedNotes);
             }
 
             _context.ServiceRequests.Remove(serviceRequest);

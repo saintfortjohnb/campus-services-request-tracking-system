@@ -1,14 +1,26 @@
 @model IEnumerable<CampusServicesApp.Models.Assignment>
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
 
 @{
     ViewData["Title"] = "Assignments";
+    var roleName = HttpContextAccessor.HttpContext?.Session.GetString("RoleName")?.Trim();
+    var isLoggedIn = !string.IsNullOrEmpty(roleName);
+    var isTechnician = string.Equals(roleName, "Technician", StringComparison.OrdinalIgnoreCase);
+    var isManager = string.Equals(roleName, "Manager", StringComparison.OrdinalIgnoreCase);
+    var isAdmin = string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase);
+    var canManageAssignments = isManager || isAdmin;
+    var canViewActions = isTechnician || isManager || isAdmin;
 }
 
 <h1>Assignments</h1>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New Assignment</a>
-</p>
+@if (canManageAssignments)
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Create New Assignment</a>
+    </p>
+}
 
 <table class="table table-striped table-bordered">
     <thead>
@@ -17,7 +29,10 @@
             <th>Assigned By</th>
             <th>Service Request</th>
             <th>Technician</th>
-            <th style="width: 180px;">Actions</th>
+            @if (canViewActions)
+            {
+                <th style="width: 180px;">Actions</th>
+            }
         </tr>
     </thead>
     <tbody>
@@ -36,11 +51,22 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Technician.Name)
             </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.AssignmentId" class="btn btn-sm btn-primary">Edit</a>
-                <a asp-action="Details" asp-route-id="@item.AssignmentId" class="btn btn-sm btn-info">Details</a>
-                <a asp-action="Delete" asp-route-id="@item.AssignmentId" class="btn btn-sm btn-danger">Delete</a>
-            </td>
+            @if (canViewActions)
+            {
+                <td>
+                    @if (canManageAssignments)
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.AssignmentId" class="btn btn-sm btn-primary">Edit</a>
+                    }
+
+                    <a asp-action="Details" asp-route-id="@item.AssignmentId" class="btn btn-sm btn-info">Details</a>
+
+                    @if (canManageAssignments)
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.AssignmentId" class="btn btn-sm btn-danger">Delete</a>
+                    }
+                </td>
+            }
         </tr>
 }
     </tbody>

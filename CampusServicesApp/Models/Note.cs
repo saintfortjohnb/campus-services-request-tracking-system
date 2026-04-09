@@ -1,21 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CampusServicesApp.Models;
-
-public partial class Note
+namespace CampusServicesApp.Models
 {
-    public int NoteId { get; set; }
+    public class Note
+    {
+        [Key]
+        public int NoteId { get; set; }
 
-    public int RequestId { get; set; }
+        [Required]
+        public int RequestId { get; set; }
 
-    public int AuthorId { get; set; }
+        [Required]
+        public int AuthorId { get; set; }
 
-    public string NoteText { get; set; } = null!;
+        [Required]
+        public string NoteText { get; set; } = string.Empty;
 
-    public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
-    public virtual User Author { get; set; } = null!;
+        [ForeignKey(nameof(RequestId))]
+        public virtual ServiceRequest? Request { get; set; }
 
-    public virtual ServiceRequest Request { get; set; } = null!;
+        [ForeignKey(nameof(AuthorId))]
+        public virtual User? Author { get; set; }
+    }
 }

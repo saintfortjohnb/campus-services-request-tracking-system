@@ -1,4 +1,18 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    var roleName = HttpContextAccessor.HttpContext?.Session.GetString("RoleName")?.Trim();
+    var userName = HttpContextAccessor.HttpContext?.Session.GetString("UserName")?.Trim();
+    var userId = HttpContextAccessor.HttpContext?.Session.GetInt32("UserId");
+    var isLoggedIn = userId.HasValue;
+    var isRequester = string.Equals(roleName, "Requester", StringComparison.OrdinalIgnoreCase);
+    var isTechnician = string.Equals(roleName, "Technician", StringComparison.OrdinalIgnoreCase);
+    var isManager = string.Equals(roleName, "Manager", StringComparison.OrdinalIgnoreCase);
+    var isAdmin = string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase);
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -23,27 +37,79 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="ServiceRequests" asp-action="Index">Service Requests</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Categories" asp-action="Index">Categories</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Index">Users</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="ServiceTeams" asp-action="Index">Teams</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Assignments" asp-action="Index">Assignments</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="StatusHistories" asp-action="Index">Status History</a>
-                        </li>
+
+                        @if (isTechnician)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="ServiceRequests" asp-action="MyAssignments">My Assigned Requests</a>
+                            </li>
+                        }
+
+                        @if (isLoggedIn)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="StatusHistories" asp-action="Index">Status History</a>
+                            </li>
+                        }
+
+                        @if (isTechnician || isManager || isAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Assignments" asp-action="Index">Assignments</a>
+                            </li>
+                        }
+
+                        @if (isManager || isAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Categories" asp-action="Index">Categories</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="ServiceTeams" asp-action="Index">Teams</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReportingDashboard">Reporting</a>
+                            </li>
+                        }
+
+                        @if (isAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Index">Users</a>
+                            </li>
+                        }
+
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
+                    </ul>
+
+                    <ul class="navbar-nav">
+                        @if (isLoggedIn)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link text-dark">Hello, @userName</span>
+                            </li>
+                            @if (!string.IsNullOrWhiteSpace(roleName))
+                            {
+                                <li class="nav-item">
+                                    <span class="nav-link text-muted">(@roleName)</span>
+                                </li>
+                            }
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Logout">Logout</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

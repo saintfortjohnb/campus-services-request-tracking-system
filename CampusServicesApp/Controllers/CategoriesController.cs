@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CampusServicesApp.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace CampusServicesApp.Controllers
 {
@@ -18,9 +19,36 @@ namespace CampusServicesApp.Controllers
             _context = context;
         }
 
+        private int? GetCurrentUserId()
+        {
+            return HttpContext.Session.GetInt32("UserId");
+        }
+
+        private bool IsLoggedIn()
+        {
+            return GetCurrentUserId().HasValue;
+        }
+
+        private bool HasRole(params string[] roles)
+        {
+            var roleName = HttpContext.Session.GetString("RoleName")?.Trim();
+            return !string.IsNullOrWhiteSpace(roleName) &&
+                   roles.Any(r => string.Equals(r, roleName, StringComparison.OrdinalIgnoreCase));
+        }
+
         // GET: Categories
         public async Task<IActionResult> Index()
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             var applicationDbContext = _context.Categories.Include(c => c.DefaultTeam);
             return View(await applicationDbContext.ToListAsync());
         }
@@ -28,6 +56,16 @@ namespace CampusServicesApp.Controllers
         // GET: Categories/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -47,6 +85,16 @@ namespace CampusServicesApp.Controllers
         // GET: Categories/Create
         public IActionResult Create()
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamName");
             return View();
         }
@@ -58,15 +106,25 @@ namespace CampusServicesApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("CategoryName,DefaultTeamId,IsActive")] Category category)
         {
-            
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             ModelState.Remove(nameof(Category.DefaultTeam));
-            
+
             if (ModelState.IsValid)
             {
                 _context.Add(category);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamName", category.DefaultTeamId);
             return View(category);
         }
@@ -74,6 +132,16 @@ namespace CampusServicesApp.Controllers
         // GET: Categories/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -84,6 +152,7 @@ namespace CampusServicesApp.Controllers
             {
                 return NotFound();
             }
+
             ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamName", category.DefaultTeamId);
             return View(category);
         }
@@ -95,6 +164,16 @@ namespace CampusServicesApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("CategoryId,CategoryName,DefaultTeamId,IsActive")] Category category)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id != category.CategoryId)
             {
                 return NotFound();
@@ -120,8 +199,10 @@ namespace CampusServicesApp.Controllers
                         throw;
                     }
                 }
+
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["DefaultTeamId"] = new SelectList(_context.ServiceTeams, "TeamId", "TeamName", category.DefaultTeamId);
             return View(category);
         }
@@ -129,6 +210,16 @@ namespace CampusServicesApp.Controllers
         // GET: Categories/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -150,6 +241,16 @@ namespace CampusServicesApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             var category = await _context.Categories.FindAsync(id);
             if (category != null)
             {

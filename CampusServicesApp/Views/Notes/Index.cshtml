@@ -1,0 +1,39 @@
+@model IEnumerable<CampusServicesApp.Models.Note>
+
+@{
+    ViewData["Title"] = "Notes";
+}
+
+<h1>Notes</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Add Note</a>
+</p>
+
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Service Request</th>
+            <th>Author</th>
+            <th>Created At</th>
+            <th>Note</th>
+            <th style="width: 180px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model)
+{
+        <tr>
+            <td>@(item.Request != null ? item.Request.TrackingNumber : "")</td>
+            <td>@(item.Author != null ? item.Author.Name : "")</td>
+            <td>@item.CreatedAt.ToString("g")</td>
+            <td>@item.NoteText</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.NoteId" class="btn btn-sm btn-primary">Edit</a>
+                <a asp-action="Details" asp-route-id="@item.NoteId" class="btn btn-sm btn-info">Details</a>
+                <a asp-action="Delete" asp-route-id="@item.NoteId" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

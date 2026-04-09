@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CampusServicesApp.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace CampusServicesApp.Controllers
 {
@@ -18,15 +19,52 @@ namespace CampusServicesApp.Controllers
             _context = context;
         }
 
+        private int? GetCurrentUserId()
+        {
+            return HttpContext.Session.GetInt32("UserId");
+        }
+
+        private bool IsLoggedIn()
+        {
+            return GetCurrentUserId().HasValue;
+        }
+
+        private bool HasRole(params string[] roles)
+        {
+            var roleName = HttpContext.Session.GetString("RoleName")?.Trim();
+            return !string.IsNullOrWhiteSpace(roleName) &&
+                   roles.Any(r => string.Equals(r, roleName, StringComparison.OrdinalIgnoreCase));
+        }
+
         // GET: ServiceTeams
         public async Task<IActionResult> Index()
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             return View(await _context.ServiceTeams.ToListAsync());
         }
 
         // GET: ServiceTeams/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -45,6 +83,16 @@ namespace CampusServicesApp.Controllers
         // GET: ServiceTeams/Create
         public IActionResult Create()
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             return View();
         }
 
@@ -55,6 +103,16 @@ namespace CampusServicesApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("TeamName,TeamEmail,IsActive")] ServiceTeam serviceTeam)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (string.IsNullOrWhiteSpace(serviceTeam.TeamName))
             {
                 ModelState.AddModelError(nameof(ServiceTeam.TeamName), "Team name is required.");
@@ -96,6 +154,16 @@ namespace CampusServicesApp.Controllers
         // GET: ServiceTeams/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -106,6 +174,7 @@ namespace CampusServicesApp.Controllers
             {
                 return NotFound();
             }
+
             return View(serviceTeam);
         }
 
@@ -116,6 +185,16 @@ namespace CampusServicesApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("TeamId,TeamName,TeamEmail,IsActive")] ServiceTeam serviceTeam)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id != serviceTeam.TeamId)
             {
                 return NotFound();
@@ -139,14 +218,26 @@ namespace CampusServicesApp.Controllers
                         throw;
                     }
                 }
+
                 return RedirectToAction(nameof(Index));
             }
+
             return View(serviceTeam);
         }
 
         // GET: ServiceTeams/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -167,6 +258,16 @@ namespace CampusServicesApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (!IsLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!HasRole("Admin", "Manager"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             var serviceTeam = await _context.ServiceTeams.FindAsync(id);
             if (serviceTeam != null)
             {

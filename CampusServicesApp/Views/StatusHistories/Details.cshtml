@@ -1,7 +1,12 @@
 @model CampusServicesApp.Models.StatusHistory
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
 
 @{
     ViewData["Title"] = "Status History Details";
+    var roleName = HttpContextAccessor.HttpContext?.Session.GetString("RoleName")?.Trim();
+    var isManager = string.Equals(roleName, "Manager", StringComparison.OrdinalIgnoreCase);
+    var isAdmin = string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase);
 }
 
 <h1>Status History Details</h1>
@@ -10,12 +15,15 @@
     <h4>Status History Information</h4>
     <hr />
     <dl class="row">
-        <dt class="col-sm-2">Old Status</dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.OldStatus)
-        </dd>
+        @if (!string.IsNullOrWhiteSpace(Model.OldStatus))
+        {
+            <dt class="col-sm-2">Old Status</dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.OldStatus)
+            </dd>
+        }
 
-        <dt class="col-sm-2">New Status</dt>
+        <dt class="col-sm-2">Current Status</dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.NewStatus)
         </dd>
@@ -38,6 +46,9 @@
 </div>
 
 <div class="mt-3">
-    <a asp-action="Edit" asp-route-id="@Model?.StatusHistoryId" class="btn btn-primary">Edit</a>
+    @if (isManager || isAdmin)
+    {
+        <a asp-action="Edit" asp-route-id="@Model?.StatusHistoryId" class="btn btn-primary">Edit</a>
+    }
     <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

@@ -1,14 +1,24 @@
 @model IEnumerable<CampusServicesApp.Models.StatusHistory>
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
 
 @{
     ViewData["Title"] = "Status History";
+
+    var roleName = HttpContextAccessor.HttpContext?.Session.GetString("RoleName")?.Trim();
+    var isAdmin = string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase);
+    var isManager = string.Equals(roleName, "Manager", StringComparison.OrdinalIgnoreCase);
+    var isRequester = string.Equals(roleName, "Requester", StringComparison.OrdinalIgnoreCase);
 }
 
 <h1>Status History</h1>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New Status Entry</a>
-</p>
+@if (isManager || isAdmin)
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Create New Status Entry</a>
+    </p>
+}
 
 <table class="table table-striped table-bordered">
     <thead>
@@ -41,9 +51,16 @@
                 @Html.DisplayFor(modelItem => item.Request.TrackingNumber)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.StatusHistoryId" class="btn btn-sm btn-primary">Edit</a>
-                <a asp-action="Details" asp-route-id="@item.StatusHistoryId" class="btn btn-sm btn-info">Details</a>
-                <a asp-action="Delete" asp-route-id="@item.StatusHistoryId" class="btn btn-sm btn-danger">Delete</a>
+                @if (isManager || isAdmin)
+                {
+                    <a asp-action="Edit" asp-route-id="@item.StatusHistoryId" class="btn btn-sm btn-primary">Edit</a>
+                    <a asp-action="Details" asp-route-id="@item.StatusHistoryId" class="btn btn-sm btn-info">Details</a>
+                    <a asp-action="Delete" asp-route-id="@item.StatusHistoryId" class="btn btn-sm btn-danger">Delete</a>
+                }
+                else
+                {
+                    <a asp-action="Details" asp-route-id="@item.StatusHistoryId" class="btn btn-sm btn-info">Details</a>
+                }
             </td>
         </tr>
 }
