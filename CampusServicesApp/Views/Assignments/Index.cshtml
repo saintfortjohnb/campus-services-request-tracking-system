@@ -59,7 +59,13 @@
                         <a asp-action="Edit" asp-route-id="@item.AssignmentId" class="btn btn-sm btn-primary">Edit</a>
                     }
 
-                    <a asp-action="Details" asp-route-id="@item.AssignmentId" class="btn btn-sm btn-info">Details</a>
+                    <!-- ✅ UPDATED: Goes to Service Request Details -->
+                    <a asp-controller="ServiceRequests"
+                       asp-action="Details"
+                       asp-route-id="@item.RequestId"
+                       class="btn btn-sm btn-info">
+                        Details
+                    </a>
 
                     @if (canManageAssignments)
                     {
