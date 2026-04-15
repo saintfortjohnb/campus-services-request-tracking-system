@@ -101,6 +101,7 @@ namespace CampusServicesApp.Controllers
                 .Include(s => s.Notes)
                     .ThenInclude(n => n.Author)
                 .FirstOrDefaultAsync(m => m.RequestId == id);
+
             if (serviceRequest == null)
             {
                 return NotFound();
@@ -485,10 +486,12 @@ namespace CampusServicesApp.Controllers
             }
 
             var serviceRequest = await _context.ServiceRequests
+                .AsNoTracking()
                 .Include(s => s.Category)
                 .Include(s => s.Requester)
                 .Include(s => s.Team)
                 .FirstOrDefaultAsync(m => m.RequestId == id);
+
             if (serviceRequest == null)
             {
                 return NotFound();
@@ -502,7 +505,9 @@ namespace CampusServicesApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var serviceRequest = await _context.ServiceRequests.FindAsync(id);
+            var serviceRequest = await _context.ServiceRequests
+                .FirstOrDefaultAsync(r => r.RequestId == id);
+
             if (serviceRequest == null)
             {
                 return RedirectToAction(nameof(Index));
@@ -537,6 +542,7 @@ namespace CampusServicesApp.Controllers
 
             _context.ServiceRequests.Remove(serviceRequest);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
