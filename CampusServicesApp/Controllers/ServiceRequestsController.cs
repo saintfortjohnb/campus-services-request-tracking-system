@@ -449,6 +449,7 @@ namespace CampusServicesApp.Controllers
                             throw;
                         }
                     }
+
                     return RedirectToAction(nameof(Index));
                 }
             }
@@ -538,6 +539,15 @@ namespace CampusServicesApp.Controllers
             if (relatedNotes.Any())
             {
                 _context.Notes.RemoveRange(relatedNotes);
+            }
+
+            var relatedNotifications = await _context.Notifications
+                .Where(n => n.RequestId == id)
+                .ToListAsync();
+
+            if (relatedNotifications.Any())
+            {
+                _context.Notifications.RemoveRange(relatedNotifications);
             }
 
             _context.ServiceRequests.Remove(serviceRequest);
